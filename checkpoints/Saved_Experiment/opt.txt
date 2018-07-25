@@ -1,0 +1,15 @@
+------------ Options -------------
+batchSize: 16
+checkpoints_dir: ./checkpoints
+dataroot: datasets/criteo-CAI
+gpu: -1
+lr: 0.001
+max_idx: 74000
+nThreads: 8
+name: Saved_Experiment
+phase: test
+random: True
+size_idx: 200
+suffix: 
+which_epoch: latest
+-------------- End ----------------
