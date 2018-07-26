@@ -1,7 +1,8 @@
 ------------ Options -------------
-batchSize: 16
+batchSize: 32
 checkpoints_dir: ./checkpoints
 dataroot: datasets/criteo-CAI
+display_freq: 100
 gpu: -1
 lr: 0.001
 max_idx: 74000

@@ -55,6 +55,7 @@ class LRModel(BaseModel):
             self.propensity = propensity
             self.label = label
         self.feature = feature
+        self.id = input['id']
 
     def forward(self):
         if self.opt.isTrain:
@@ -71,12 +72,12 @@ class LRModel(BaseModel):
     # no backprop gradients
     def test(self):
         self.forward()
-        return self.pred.data.cpu().numpy()
+        return {'ids': self.id.cpu().numpy().reshape(-1), 'preds': self.pred.data.cpu().numpy().reshape(-1)}
 
     def _test(self, input):
         self.set_input(input)
         self.forward()
-        return {'id': input['id'], 'pred': self.pred.data.cpu().numpy()}
+        return {'ids': input['id'], 'preds': self.pred.data.cpu().numpy()}
 
     def backward(self):
         self.loss = self.criterion(self.pred, self.label)

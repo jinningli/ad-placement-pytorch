@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import scipy.sparse as sp
 
 def mkdirs(paths):
     if isinstance(paths, list) and not isinstance(paths, str):
@@ -7,7 +8,6 @@ def mkdirs(paths):
             mkdir(path)
     else:
         mkdir(paths)
-
 
 def mkdir(path):
     if not os.path.exists(path):
@@ -31,3 +31,10 @@ def post_process(pred, id):
     pred[m] = pred[m] + maxplus
     pred_str = to_prediction_str(id, pred)
     return pred_str + '\n'
+
+def to_csr(idxs, vals, dim=74000):
+    vals = np.ones(len(idxs), dtype='int64')  # TODO use value?
+    rows = np.zeros((len(idxs)), dtype='int64')
+    cols = np.array(idxs, dtype='int64')
+    values = np.array(vals, dtype='float32')
+    return sp.csr_matrix((values, (rows, cols)), shape=(1, dim))

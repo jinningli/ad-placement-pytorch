@@ -12,16 +12,19 @@ class LRDataLoader(BaseDataLoader):
 
         if opt.isTrain:
             self.shuffle = opt.random
+            self.drop_last = True
         else:
             self.shuffle = False
+            self.drop_last = False
 
         self.dataloader = DataLoader(
             self.dataset,
             batch_size=opt.batchSize,
             # batch_size=1,
             shuffle=self.shuffle,
-            num_workers=int(opt.nThreads)
+            num_workers=int(opt.nThreads),
             # collate_fn=collate
+            drop_last=self.drop_last
         )
 
     def load_data(self):
