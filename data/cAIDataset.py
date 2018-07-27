@@ -40,12 +40,12 @@ class CAIDataset(BaseDataset):
         self.opt = opt
         fin = open(join(opt.dataroot, opt.phase + '.txt'), 'r')
         print('Initializing Dataset...')
-        if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and opt.cache:
+        if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and not opt.no_cache:
             print('Loading dataset from cache')
             with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'rb') as cache:
                 self.data = pickle.load(cache)
         else:
-            if not os.path.exists(join(opt.dataroot, 'cache')) and opt.cache:
+            if not os.path.exists(join(opt.dataroot, 'cache')) and not opt.no_cache:
                 os.mkdir(join(opt.dataroot, 'cache'))
             cnt = 0
             for line in fin:
@@ -76,7 +76,7 @@ class CAIDataset(BaseDataset):
                     label = torch.from_numpy(np.array([label], dtype='float32'))
                     self.data.append({'p': propensity, 'feature': feature, 'label': label})
             fin.close()
-            if opt.cache:
+            if not opt.no_cache:
                 with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'wb') as cache:
                     print('Dump dataset into ' + join(opt.dataroot, 'cache', opt.phase + '.pkl'))
                     pickle.dump(self.data, cache)

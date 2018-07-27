@@ -43,6 +43,8 @@ class LRModel(BaseModel):
         if self.opt.isTrain:
             propensity = input['p']
             label = input['label']
+        else:
+            self.id = input['id']
         feature = input['feature']
 
         if self.gpu >= 0:
@@ -55,7 +57,6 @@ class LRModel(BaseModel):
             self.propensity = propensity
             self.label = label
         self.feature = feature
-        self.id = input['id']
 
     def forward(self):
         if self.opt.isTrain:

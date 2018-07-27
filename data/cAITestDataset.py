@@ -33,12 +33,12 @@ class CAITestDataset(BaseDataset):
         self.opt = opt
         fin = open(join(opt.dataroot, opt.phase + '.txt'), 'r')
         print('Initializing Dataset...')
-        if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')):
+        if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and not opt.no_cache:
             print('Loading dataset from cache')
             with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'rb') as cache:
                 self.data = pickle.load(cache)
         else:
-            if not os.path.exists(join(opt.dataroot, 'cache')):
+            if not os.path.exists(join(opt.dataroot, 'cache')) and not opt.no_cache:
                 os.mkdir(join(opt.dataroot, 'cache'))
             cnt = 0
             for line in fin:
@@ -54,9 +54,10 @@ class CAITestDataset(BaseDataset):
                 # feature = get_sparse_tensor(idx, val)
                 self.data.append({'id': id, 'feature': feature})
             fin.close()
-            with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'wb') as cache:
-                print('Dump dataset into ' + join(opt.dataroot, 'cache', opt.phase + '.pkl'))
-                pickle.dump(self.data, cache)
+            if not opt.no_cache:
+                with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'wb') as cache:
+                    print('Dump dataset into ' + join(opt.dataroot, 'cache', opt.phase + '.pkl'))
+                    pickle.dump(self.data, cache)
 
         # groups = groupby(self.data, key=lambda x: x['id'])
         # for id, group in groups:
