@@ -9,20 +9,21 @@ import torch.sparse as sparse
 from itertools import groupby
 import pickle
 from utils.utils import to_csr
+from utils.utils import get_sparse_tensor
 
 # def save_csr()
 #     sp.save_npz('tmp/X_train_sparse.npz', X_train, compressed=False)
 
-def fillto(nparr, dim=200):
-    length = len(nparr)
-    if length > dim:
-        print('Warning: length exceed limit: ' + str(length) + '/' + str(dim))
-        res = nparr[:dim]
-        return res, dim
-    else:
-        fillarr = np.zeros(dim-length, dtype='int64')
-        res = np.concatenate((nparr, fillarr), axis=0)
-        return res, length
+# def fillto(nparr, dim=200):
+#     length = len(nparr)
+#     if length > dim:
+#         print('Warning: length exceed limit: ' + str(length) + '/' + str(dim))
+#         res = nparr[:dim]
+#         return res, dim
+#     else:
+#         fillarr = np.zeros(dim-length, dtype='int64')
+#         res = np.concatenate((nparr, fillarr), axis=0)
+#         return res, length
 
 class CAITestDataset(BaseDataset):
     def __init__(self):
@@ -33,12 +34,12 @@ class CAITestDataset(BaseDataset):
         self.opt = opt
         fin = open(join(opt.dataroot, opt.phase + '.txt'), 'r')
         print('Initializing Dataset...')
-        if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and not opt.no_cache:
+        if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and opt.cache:
             print('Loading dataset from cache')
             with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'rb') as cache:
                 self.data = pickle.load(cache)
         else:
-            if not os.path.exists(join(opt.dataroot, 'cache')) and not opt.no_cache:
+            if not os.path.exists(join(opt.dataroot, 'cache')) and opt.cache:
                 os.mkdir(join(opt.dataroot, 'cache'))
             cnt = 0
             for line in fin:
@@ -50,11 +51,16 @@ class CAITestDataset(BaseDataset):
                 assert len(split) == 2
                 features = split[1].lstrip('f ').strip()
                 f0, f1, idx, val = self.parse_features(features)
-                feature = to_csr(idx, val)
+
+                if not opt.cache:
+                    feature = get_sparse_tensor(idx, val)
+                else:
+                    feature = to_csr(idx, val)
+
                 # feature = get_sparse_tensor(idx, val)
                 self.data.append({'id': id, 'feature': feature})
             fin.close()
-            if not opt.no_cache:
+            if opt.cache:
                 with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'wb') as cache:
                     print('Dump dataset into ' + join(opt.dataroot, 'cache', opt.phase + '.pkl'))
                     pickle.dump(self.data, cache)
@@ -79,7 +85,10 @@ class CAITestDataset(BaseDataset):
         #         cat = torch.cat((cat, item['feature'].to_dense()), dim=0)
         #
         item = self.data[index].copy()
-        item['feature'] = torch.from_numpy(item['feature'].toarray().astype('float32')).view(-1)
+        if not self.opt.cache:
+            item['feature'] = item['feature'].to_dense().view(-1)
+        else:
+            item['feature'] = torch.from_numpy(item['feature'].toarray().astype('float32')).view(-1)
         return item
 
     def __len__(self):

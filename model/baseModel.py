@@ -49,9 +49,13 @@ class BaseModel(nn.Module):
         #             net.cuda(self.gpu)
         #         else:
         #             torch.save(net.cpu().state_dict(), save_path)
+        if self.opt.propensity != 'no':
+            self.criterion = None
+            self.loss = None
         save_filename = '%s_%s.save' % (which_epoch, self.name())
         save_path = os.path.join(self.save_dir, save_filename)
-        print('Saving Model to ' + save_path)
+        if not self.name() == 'latest':
+            print('Saving Model to ' + save_path)
         if self.gpu >= 0 and torch.cuda.is_available():
             torch.save(self.cpu().state_dict(), save_path)
             self.cuda(self.gpu)
@@ -72,10 +76,15 @@ class BaseModel(nn.Module):
         save_filename = '%s_%s.save' % (which_epoch, self.name())
         save_path = os.path.join(self.save_dir, save_filename)
         print('Loading Model from ' + save_path)
+
+        pretrained_dict = torch.load(save_path)
+        model_dict = self.state_dict()
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        model_dict.update(pretrained_dict)
         if self.gpu >= 0 and torch.cuda.is_available():
-            self.load_state_dict(torch.load(save_path))
+            self.load_state_dict(model_dict)
         else:
-            self.load_state_dict(torch.load(save_path))
+            self.load_state_dict(model_dict)
 
     # print network information
     def print_networks(self):

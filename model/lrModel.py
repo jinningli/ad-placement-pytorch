@@ -21,9 +21,13 @@ class LRModel(BaseModel):
         self.fc2 = init_net(nn.Linear(4096, 1), init_type='normal', gpu=self.opt.gpu)
 
         if opt.isTrain:
-            self.criterion = nn.BCELoss(size_average=True)
-            if opt.gpu >= 0:
-                self.criterion.cuda(opt.gpu)
+            if opt.propensity == 'no':
+                self.criterion = nn.BCELoss(size_average=True)
+                if opt.gpu >= 0:
+                    self.criterion.cuda(opt.gpu)
+            else:
+                self.criterion = None
+
             self.schedulers = []
             self.optimizers = []
             self.optimizer = torch.optim.Adam(self.parameters(), lr=opt.lr, weight_decay=1e-5)
@@ -41,7 +45,7 @@ class LRModel(BaseModel):
         label = None
 
         if self.opt.isTrain:
-            propensity = input['p']
+            propensity = input['p'].view(self.opt.batchSize, 1)
             label = input['label']
         else:
             self.id = input['id']
@@ -60,7 +64,7 @@ class LRModel(BaseModel):
 
     def forward(self):
         if self.opt.isTrain:
-            self.propensity = Variable(self.propensity)
+            # self.propensity = Variable(self.propensity)
             self.label = Variable(self.label)
 
         self.feature = Variable(self.feature)
@@ -81,7 +85,15 @@ class LRModel(BaseModel):
         return {'ids': input['id'], 'preds': self.pred.data.cpu().numpy()}
 
     def backward(self):
-        self.loss = self.criterion(self.pred, self.label)
+        if self.opt.propensity == 'no':
+            self.loss = self.criterion(self.pred, self.label)
+        elif self.opt.propensity == 'naive':
+            self.criterion = nn.BCELoss(weight=self.propensity, size_average=True)
+            self.loss = self.criterion(self.pred, self.label)
+            if self.opt.gpu >= 0:
+                self.loss.cuda(self.opt.gpu)
+        else:
+            raise NotImplementedError('No such propensity mode')
         # print(float(self.loss.data.cpu()))
         self.loss.backward()
         # print(self.loss.data)

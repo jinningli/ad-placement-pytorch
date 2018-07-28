@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import scipy.sparse as sp
+import torch
+import torch.sparse as sparse
 
 def mkdirs(paths):
     if isinstance(paths, list) and not isinstance(paths, str):
@@ -38,3 +40,13 @@ def to_csr(idxs, vals, dim=74000):
     cols = np.array(idxs, dtype='int64')
     values = np.array(vals, dtype='float32')
     return sp.csr_matrix((values, (rows, cols)), shape=(1, dim))
+
+def get_sparse_tensor(idxs, vals, dim=74000):
+    rows = torch.from_numpy(np.zeros(len(idxs), dtype='int64')).view(1, -1)
+    cols = torch.from_numpy(np.array(idxs, dtype='int64')).view(1, -1)
+    i = torch.cat((rows, cols), dim=0)
+    vals = np.ones(len(idxs), dtype='int64') #TODO use value?
+    v = torch.from_numpy(np.array(vals, dtype='float32'))
+    sparse_matrix = sparse.FloatTensor(i, v, torch.Size([1, dim]))
+    # print(sparse_matrix)
+    return sparse_matrix

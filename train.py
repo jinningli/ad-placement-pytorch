@@ -5,6 +5,7 @@ from option.trainOption import TrainOptions
 from data.cAIDataset import CAIDataset
 from dataLoader.lrDataLoader import LRDataLoader
 from model.lrModel import LRModel
+import time
 
 def create_model(opt):
     if opt.isTrain:
@@ -33,6 +34,8 @@ if __name__ == '__main__':
     for epoch in range(opt.epoch):
         epoch_iter = 0
         t_data = 0.0
+        epoch_start_time = time.time()
+        iter_start_time = time.time()
 
         for i, data in enumerate(lr_loader):
             # print('[' + str(epoch) + "][" + str(epoch_iter) + ']')
@@ -43,15 +46,14 @@ if __name__ == '__main__':
 
             if total_steps % opt.display_freq == 0:
                 res = ''
-                res += '[' + str(epoch) + "][" + str(epoch_iter) + '] Loss: ' + str(model.get_current_losses())
-                # for k, v in losses.items():
-                #     res += '%s: %.3f ' % (k, v)
-                # res += "| AvgTime: %.3f" % t_data
+                res += '[' + str(epoch) + "][" + str(epoch_iter) + '/' + str(len(dataset)) + '] Loss: %.5f'%(model.get_current_losses()) + ' Time: %.2f'%(time.time() - iter_start_time)
                 print(res)
                 pass
 
-        if epoch % opt.save_epoch_freq == 0:
-            print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))
+            iter_start_time = time.time()
+
+        print('[' + str(epoch) + '] End of epoch. Time: %.2f'%(time.time() - epoch_start_time))
+        if epoch % opt.save_epoch_freq == 0 or epoch == opt.epoch - 1:
             model.save_networks('latest')
             model.save_networks(epoch)
 

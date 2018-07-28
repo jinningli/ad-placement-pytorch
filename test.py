@@ -40,6 +40,9 @@ if __name__ == '__main__':
     timestr = time.strftime("_%m%d%H%M%S", time.localtime())
     with open(os.path.join(model.save_dir, "test", 'pred' + timestr + '.txt'), 'w+') as output:
         ls = []
+        epoch_start_time = time.time()
+        iter_start_time = time.time()
+
         for i, data in enumerate(lr_loader): # for every batch
             model.set_input(data)
             res = model.test()
@@ -47,15 +50,18 @@ if __name__ == '__main__':
             ids = res['ids'].tolist()
             cnt += len(preds)
             if cnt % opt.display_freq == 0:
-                print('[' + str(cnt) + '/' + str(len(dataset)) + ']')
+                print('[' + str(cnt) + '/' + str(len(dataset)) + ']' + ' Time: %.2f'%(time.time() - iter_start_time))
             for k in range(len(preds)):
                 ls.append((ids[k], preds[k]))
+            iter_start_time = time.time()
+
         groups = groupby(ls, key=lambda x: x[0])
         for id, group in groups:
             arrayls = []
             for item in group:
                 arrayls.append(item[1])
             output.write(post_process(pred=np.array(arrayls, dtype='float32'), id=id))
+
     os.system('gzip ' + os.path.join(model.save_dir, "test", 'pred' + timestr + '.txt'))
     print('Prediction Saved in ' + os.path.join(model.save_dir, "test", 'pred' + timestr + '.txt.gz'))
     print('>>Submit Now: (large/small/no)?')

@@ -7,29 +7,19 @@ import numpy as np
 import torch
 import pickle
 from utils.utils import to_csr
-
+from utils.utils import get_sparse_tensor
 import torch.sparse as sparse
 
-# def get_sparse_tensor(idxs, vals, dim=74000):
-#     rows = torch.from_numpy(np.zeros(len(idxs), dtype='int64')).view(1, -1)
-#     cols = torch.from_numpy(np.array(idxs, dtype='int64')).view(1, -1)
-#     i = torch.cat((rows, cols), dim=0)
-#     vals = np.ones(len(idxs), dtype='int64') #TODO use value?
-#     v = torch.from_numpy(np.array(vals, dtype='float32'))
-#     sparse_matrix = sparse.FloatTensor(i, v, torch.Size([1, dim]))
-#     # print(sparse_matrix)
-#     return sparse_matrix
-
-def fillto(nparr, dim=200):
-    length = len(nparr)
-    if length > dim:
-        print('Warning: length exceed limit: ' + str(length) + '/' + str(dim))
-        res = nparr[:dim]
-        return res, dim
-    else:
-        fillarr = np.zeros(dim-length, dtype='int64')
-        res = np.concatenate((nparr, fillarr), axis=0)
-        return res, length
+# def fillto(nparr, dim=200):
+#     length = len(nparr)
+#     if length > dim:
+#         print('Warning: length exceed limit: ' + str(length) + '/' + str(dim))
+#         res = nparr[:dim]
+#         return res, dim
+#     else:
+#         fillarr = np.zeros(dim-length, dtype='int64')
+#         res = np.concatenate((nparr, fillarr), axis=0)
+#         return res, length
 
 class CAIDataset(BaseDataset):
     def __init__(self):
@@ -40,12 +30,12 @@ class CAIDataset(BaseDataset):
         self.opt = opt
         fin = open(join(opt.dataroot, opt.phase + '.txt'), 'r')
         print('Initializing Dataset...')
-        if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and not opt.no_cache:
+        if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and opt.cache:
             print('Loading dataset from cache')
             with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'rb') as cache:
                 self.data = pickle.load(cache)
         else:
-            if not os.path.exists(join(opt.dataroot, 'cache')) and not opt.no_cache:
+            if not os.path.exists(join(opt.dataroot, 'cache')) and opt.cache:
                 os.mkdir(join(opt.dataroot, 'cache'))
             cnt = 0
             for line in fin:
@@ -69,14 +59,21 @@ class CAIDataset(BaseDataset):
                     assert p.startswith('p')
                     p = p.lstrip('p ').strip()
                     propensity = float(p)
-                    propensity = torch.from_numpy(np.array([propensity]))
+
+                    propensity = torch.from_numpy(np.array([propensity], dtype='float32'))
+
                     features = split[3].lstrip('f ').strip()
                     f0, f1, idx, val = self.parse_features(features)
-                    feature = to_csr(idx, val)
+
+                    if not opt.cache:
+                        feature = get_sparse_tensor(idx, val)
+                    else:
+                        feature = to_csr(idx, val)
+
                     label = torch.from_numpy(np.array([label], dtype='float32'))
                     self.data.append({'p': propensity, 'feature': feature, 'label': label})
             fin.close()
-            if not opt.no_cache:
+            if opt.cache:
                 with open(join(opt.dataroot, 'cache', opt.phase + '.pkl'), 'wb') as cache:
                     print('Dump dataset into ' + join(opt.dataroot, 'cache', opt.phase + '.pkl'))
                     pickle.dump(self.data, cache)
@@ -84,7 +81,10 @@ class CAIDataset(BaseDataset):
     def __getitem__(self, index):
         # store in sparse, get in dense
         item = self.data[index].copy()
-        item['feature'] = torch.from_numpy(item['feature'].toarray().astype('float32')).view(-1)
+        if not self.opt.cache:
+            item['feature'] = item['feature'].to_dense().view(-1)
+        else:
+            item['feature'] = torch.from_numpy(item['feature'].toarray().astype('float32')).view(-1)
         return item
 
     def __len__(self):
