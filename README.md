@@ -32,13 +32,13 @@ python3 getFirstLine.py --data criteo_train.txt --result train.txt
 #### Train
 
 ```
-python3 train.py --dataroot datasets/criteo --name Saved_Name --batchSize 5000 --gpu 0 --no_cache
+python3 train.py --dataroot datasets/criteo --name Saved_Name --batchSize 5000 --gpu 0
 ```
 
 #### Test
 
 ```
-python3 test.py --dataroot datasets/criteo --name Saved_Name --batchSize 5000 --gpu 0 --no_cache
+python3 test.py --dataroot datasets/criteo --name Saved_Name --batchSize 5000 --gpu 0
 ```
 
 Checkpoints and Test result will be saved in `checkpoints/Saved_Name`.
@@ -69,8 +69,10 @@ Checkpoints and Test result will be saved in `checkpoints/Saved_Name`.
 
 `--which_epoch` Which epoch to load? default is the latest.
 
-`--no_cache` Don't save processed dataset for faster loading next time.
+`--cache` Save processed dataset for faster loading next time.
 
 `--random` Randomize (Shuffle) input data.
 
 `--nThreads` Number of threads for loading data.
+
+`--propensity` Using propensity weighted BCE? no|naive

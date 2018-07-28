@@ -2,16 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="83b80da1-8fa3-489b-933f-3ad3caee2192" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/data/cAIDataset.py" afterPath="$PROJECT_DIR$/data/cAIDataset.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/data/cAITestDataset.py" afterPath="$PROJECT_DIR$/data/cAITestDataset.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model/baseModel.py" afterPath="$PROJECT_DIR$/model/baseModel.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model/lrModel.py" afterPath="$PROJECT_DIR$/model/lrModel.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/option/baseOption.py" afterPath="$PROJECT_DIR$/option/baseOption.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/option/trainOption.py" afterPath="$PROJECT_DIR$/option/trainOption.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test.py" afterPath="$PROJECT_DIR$/test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train.py" afterPath="$PROJECT_DIR$/train.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/utils.py" afterPath="$PROJECT_DIR$/utils/utils.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -123,7 +114,7 @@
       <file leaf-file-name="cAIDataset.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/data/cAIDataset.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="259">
+            <state relative-caret-position="945">
               <caret line="63" column="0" lean-forward="false" selection-start-line="63" selection-start-column="0" selection-end-line="63" selection-end-column="0" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
@@ -1031,7 +1022,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/data/cAIDataset.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="259">
+        <state relative-caret-position="945">
           <caret line="63" column="0" lean-forward="false" selection-start-line="63" selection-start-column="0" selection-end-line="63" selection-end-column="0" />
           <folding>
             <element signature="e#0#40#0" expanded="true" />
