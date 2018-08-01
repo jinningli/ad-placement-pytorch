@@ -1,16 +1,24 @@
 ------------ Options -------------
 batchSize: 32
+cache: False
 checkpoints_dir: ./checkpoints
+continue_train: False
 dataroot: datasets/criteo-CAI
-display_freq: 100
+display_freq: 1
+epoch: 11
 gpu: -1
 lr: 0.001
+lr_policy: same
 max_idx: 74000
-nThreads: 8
+nThreads: 4
 name: Saved_Experiment
-phase: test
+phase: train
+propensity: no
 random: True
+save_epoch_freq: 10
 size_idx: 200
+sparse: True
+split_train: 0.75
 suffix: 
 which_epoch: latest
 -------------- End ----------------

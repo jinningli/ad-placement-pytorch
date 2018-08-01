@@ -10,17 +10,44 @@ import numpy as np
 import math
 from torch.nn.parameter import Parameter
 
-class LRModel(BaseModel):
+class MyLinear(nn.Module):
+    def __init__(self, in_features, out_features, bias=True):
+        super(MyLinear, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.weight = Parameter(torch.Tensor(out_features, in_features))
+        if bias:
+            self.bias = Parameter(torch.Tensor(out_features))
+        else:
+            self.register_parameter('bias', None)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.weight.size(1))
+        self.weight.data.uniform_(-stdv, stdv)
+        if self.bias is not None:
+            self.bias.data.uniform_(-stdv, stdv)
+
+    def forward(self, input):
+        ss = torch.mm(input, self.weight.t())
+        return torch.add(ss, self.bias)
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+            + str(self.in_features) + ' -> ' \
+            + str(self.out_features) + ')'
+
+class LRSparseModel(BaseModel):
     def name(self):
-        return 'LR'
+        return 'LRSparse'
 
     def initialize(self, opt):
         BaseModel.initialize(self, opt)
         self.isTrain = opt.isTrain
         self.loss_names = ['loss']
         self.model_names = ['fc1', 'fc2']
-        self.fc1 = init_net(nn.Linear(opt.max_idx, 4096), init_type='normal', gpu=self.opt.gpu)
-        self.fc2 = init_net(nn.Linear(4096, 1), init_type='normal', gpu=self.opt.gpu)
+        self.fc1 = init_net(MyLinear(opt.max_idx, 4096), init_type='normal', gpu=self.opt.gpu)
+        self.fc2 = init_net(MyLinear(4096, 1), init_type='normal', gpu=self.opt.gpu)
 
         if opt.isTrain:
             if opt.propensity == 'no':
@@ -33,6 +60,7 @@ class LRModel(BaseModel):
             self.schedulers = []
             self.optimizers = []
             self.optimizer = torch.optim.Adam(self.parameters(), lr=opt.lr, weight_decay=1e-5)
+            # self.optimizer = torch.optim.SparseAdam(self.parameters(), lr=opt.lr)
             self.optimizers.append(self.optimizer)
             for optimizer in self.optimizers:
                 self.schedulers.append(networks.get_scheduler(optimizer, opt))
@@ -47,26 +75,27 @@ class LRModel(BaseModel):
         label = None
 
         if self.opt.isTrain:
-            propensity = input['p'].view(self.opt.batchSize, 1)
+            # propensity = input['p'].view(self.opt.batchSize, 1) #######################################
             label = input['label']
         else:
             self.id = input['id']
+
         feature = input['feature']
 
         if self.gpu >= 0:
             if self.opt.isTrain:
-                propensity = propensity.cuda(self.gpu, async=True)
+                # propensity = propensity.cuda(self.gpu, async=True)#################################
                 label = label.cuda(self.gpu, async=True)
             feature = feature.cuda(self.gpu, async=True)
 
         if self.opt.isTrain:
-            self.propensity = propensity
+            # self.propensity = propensity################################################
             self.label = label
         self.feature = feature
 
     def forward(self):
         if self.opt.isTrain:
-            self.propensity = Variable(self.propensity)
+            # self.propensity = Variable(self.propensity)#############################################
             self.label = Variable(self.label)
 
         self.feature = Variable(self.feature)

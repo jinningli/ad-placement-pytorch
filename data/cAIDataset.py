@@ -8,7 +8,6 @@ import torch
 import pickle
 from utils.utils import to_csr
 from utils.utils import get_sparse_tensor
-import torch.sparse as sparse
 
 # def fillto(nparr, dim=200):
 #     length = len(nparr)
@@ -82,7 +81,7 @@ class CAIDataset(BaseDataset):
         # store in sparse, get in dense
         item = self.data[index].copy()
         if not self.opt.cache:
-            item['feature'] = item['feature'].to_dense().view(-1)
+                item['feature'] = item['feature'].to_dense().view(-1)
         else:
             item['feature'] = torch.from_numpy(item['feature'].toarray().astype('float32')).view(-1)
         return item

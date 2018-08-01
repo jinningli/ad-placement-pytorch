@@ -11,6 +11,7 @@ import pickle
 from utils.utils import to_csr
 from utils.utils import get_sparse_tensor
 
+
 # def save_csr()
 #     sp.save_npz('tmp/X_train_sparse.npz', X_train, compressed=False)
 
@@ -65,12 +66,12 @@ class CAITestDataset(BaseDataset):
                     print('Dump dataset into ' + join(opt.dataroot, 'cache', opt.phase + '.pkl'))
                     pickle.dump(self.data, cache)
 
-        # groups = groupby(self.data, key=lambda x: x['id'])
-        # for id, group in groups:
-        #     ls = []
-        #     for item in group:
-        #         ls.append(item)
-        #     self.groups.append(ls)
+                    # groups = groupby(self.data, key=lambda x: x['id'])
+                    # for id, group in groups:
+                    #     ls = []
+                    #     for item in group:
+                    #         ls.append(item)
+                    #     self.groups.append(ls)
 
     def __getitem__(self, index):
         # store in sparse, get in dense
@@ -84,7 +85,7 @@ class CAITestDataset(BaseDataset):
         #     else:
         #         cat = torch.cat((cat, item['feature'].to_dense()), dim=0)
         #
-        
+
         if not self.opt.cache:
             item = self.data[index]
             res = {'id': item['id'], 'feature': item['feature'].to_dense().view(-1)}
@@ -93,7 +94,6 @@ class CAITestDataset(BaseDataset):
             item = self.data[index].copy()
             item['feature'] = torch.from_numpy(item['feature'].toarray().astype('float32')).view(-1)
             return item
-
 
     def __len__(self):
         return len(self.data)

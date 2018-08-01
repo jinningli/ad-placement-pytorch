@@ -60,7 +60,7 @@ class BaseModel(nn.Module):
             torch.save(self.cpu().state_dict(), save_path)
             self.cuda(self.gpu)
         else:
-            self.save(self.cpu().state_dict(), save_path)
+            torch.save(self.cpu().state_dict(), save_path)
 
     # load models from the disk
     def load_networks(self, which_epoch):

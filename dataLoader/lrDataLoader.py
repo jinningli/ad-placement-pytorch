@@ -17,6 +17,10 @@ class LRDataLoader(BaseDataLoader):
             self.shuffle = False
             self.drop_last = False
 
+        self.pin_memory = False
+        if opt.gpu >= 0:
+            self.pin_memory = True
+
         self.dataloader = DataLoader(
             self.dataset,
             batch_size=opt.batchSize,
@@ -24,7 +28,8 @@ class LRDataLoader(BaseDataLoader):
             shuffle=self.shuffle,
             num_workers=int(opt.nThreads),
             # collate_fn=collate
-            drop_last=self.drop_last
+            drop_last=self.drop_last,
+            pin_memory=self.pin_memory
         )
 
     def load_data(self):
