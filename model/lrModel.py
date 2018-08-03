@@ -45,28 +45,33 @@ class LRModel(BaseModel):
     def set_input(self, input):
         propensity = None
         label = None
+        id = None
 
         if self.opt.isTrain:
             propensity = input['p'].view(self.opt.batchSize, 1)
             label = input['label']
         else:
-            self.id = input['id']
+            id = input['id']
+
         feature = input['feature']
 
         if self.gpu >= 0:
             if self.opt.isTrain:
                 propensity = propensity.cuda(self.gpu, async=True)
                 label = label.cuda(self.gpu, async=True)
+            else:
+                id = id.cuda(self.gpu, async=True)
             feature = feature.cuda(self.gpu, async=True)
 
         if self.opt.isTrain:
             self.propensity = propensity
             self.label = label
+        else:
+            self.id = id
         self.feature = feature
 
     def forward(self):
         if self.opt.isTrain:
-            self.propensity = Variable(self.propensity)
             self.label = Variable(self.label)
 
         self.feature = Variable(self.feature)
@@ -91,6 +96,13 @@ class LRModel(BaseModel):
         if self.opt.propensity == 'no':
             self.loss = self.criterion(self.pred, self.label)
         elif self.opt.propensity == 'naive':
+            self.criterion = nn.BCELoss(weight=self.propensity, size_average=True)
+            self.loss = self.criterion(self.pred, self.label)
+            if self.opt.gpu >= 0:
+                self.loss.cuda(self.opt.gpu)
+        elif self.opt.propensity == 'min':
+            cval = self.opt.clip_value
+            self.propensity[self.propensity >= cval] = cval
             self.criterion = nn.BCELoss(weight=self.propensity, size_average=True)
             self.loss = self.criterion(self.pred, self.label)
             if self.opt.gpu >= 0:

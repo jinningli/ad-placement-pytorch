@@ -79,7 +79,7 @@ Checkpoints and Test result will be saved in `checkpoints/Saved_Name`.
 
 `--sparse` Using sparse matrix multiplication
 
-`--numerator` Numerator of propensity weighting
+`--clip_value` Value used for propensity weighting
 
 #### Using Sparse Matrix multiplication
 

@@ -48,6 +48,7 @@ class CAITestDataset(BaseDataset):
                     print(cnt)
                 split = line.split('|')
                 id = int(split[0].strip())
+                id = torch.from_numpy(np.array([id], dtype='int64')).view(-1)
                 assert len(split) == 2
                 features = split[1].lstrip('f ').strip()
                 f0, f1, idx, val = self.parse_features(features)
@@ -73,26 +74,12 @@ class CAITestDataset(BaseDataset):
         #     self.groups.append(ls)
 
     def __getitem__(self, index):
-        # store in sparse, get in dense
-        # group = self.groups[index]
-        # cat = None
-        # id = None
-        # for item in group:
-        #     if cat is None:
-        #         cat = item['feature'].to_dense()
-        #         id = item['id']
-        #     else:
-        #         cat = torch.cat((cat, item['feature'].to_dense()), dim=0)
-        #
-        
+        item = self.data[index].copy()
         if not self.opt.cache:
-            item = self.data[index]
-            res = {'id': item['id'], 'feature': item['feature'].to_dense().view(-1)}
-            return res
+                item['feature'] = item['feature'].to_dense().view(-1)
         else:
-            item = self.data[index].copy()
             item['feature'] = torch.from_numpy(item['feature'].toarray().astype('float32')).view(-1)
-            return item
+        return item
 
 
     def __len__(self):
