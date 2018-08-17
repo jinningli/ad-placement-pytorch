@@ -60,23 +60,24 @@ if __name__ == '__main__':
             arrayls = []
             for item in group:
                 arrayls.append(item[1])
-            output.write(post_process(pred=np.array(arrayls, dtype='float32'), id=id))
+            output.write(post_process(pred=np.array(arrayls, dtype='float32'), id=id, opt=opt))
 
     os.system('gzip ' + os.path.join(model.save_dir, "test", 'pred' + timestr + '.txt'))
-    print('Prediction Saved in ' + os.path.join(model.save_dir, "test", 'pred' + timestr + '.txt.gz'))
+
+    # Detach the memory
+    save_dir = model.save_dir
+    model.cpu()
+    model = None
+    dataset = None
+    lr_loader = None
+
+    print('Prediction Saved in ' + os.path.join(save_dir, "test", 'pred' + timestr + '.txt.gz'))
     print('>>Submit Now: (large/small/no)?')
     s = input()
     if s == 'no':
         exit()
-    import crowdai
-    apikey = 'd2bb1449385c3a911f995b2b0f7dac1a'
-    challenge = crowdai.Challenge("CriteoAdPlacementNIPS2017", apikey)
-    scores = None
-    if s == 'small':
-        scores = challenge.submit(os.path.join(model.save_dir, "test", 'pred' + timestr + '.txt.gz'), small_test=True)
-    elif s == 'large':
-        scores = challenge.submit(os.path.join(model.save_dir, "test", 'pred' + timestr + '.txt.gz'), small_test=False)
-    print(scores)
+    os.system('python3 submit.py --data ' + os.path.join(save_dir, "test", 'pred' + timestr + '.txt.gz') + ' --size ' + s)
+    print('python3 submit.py --data ' + os.path.join(save_dir, "test", 'pred' + timestr + '.txt.gz') + ' --size ' + s)
 
 
 

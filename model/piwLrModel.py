@@ -10,14 +10,16 @@ import numpy as np
 import math
 from torch.nn.parameter import Parameter
 
-class LRModel(BaseModel):
+class PiwLRModel(BaseModel):
     def name(self):
-        return 'LR'
+        return 'PiwLRModel'
 
     def initialize(self, opt):
         BaseModel.initialize(self, opt)
         self.isTrain = opt.isTrain
         self.loss_names = ['loss']
+        self.info_names = ['weight']
+        # self.info_names = []
         self.model_names = ['fc1', 'fc2']
         self.fc1 = init_net(nn.Linear(opt.max_idx, 4096), init_type='normal', gpu=self.opt.gpu)
         self.fc2 = init_net(nn.Linear(4096, 1), init_type='normal', gpu=self.opt.gpu)
@@ -45,13 +47,11 @@ class LRModel(BaseModel):
     def set_input(self, input):
         propensity = None
         label = None
-        id = None
+        id = input['id']
 
         if self.opt.isTrain:
-            propensity = input['p'].view(self.opt.batchSize, 1)
+            propensity = input['propensity'].view(self.opt.batchSize, 1)
             label = input['label']
-        else:
-            id = input['id']
 
         feature = input['feature']
 
@@ -59,15 +59,13 @@ class LRModel(BaseModel):
             if self.opt.isTrain:
                 propensity = propensity.cuda(self.gpu, async=True)
                 label = label.cuda(self.gpu, async=True)
-            else:
-                id = id.cuda(self.gpu, async=True)
             feature = feature.cuda(self.gpu, async=True)
 
         if self.opt.isTrain:
             self.propensity = propensity
             self.label = label
-        else:
-            self.id = id
+
+        self.id = id
         self.feature = feature
 
     def forward(self):
@@ -107,6 +105,14 @@ class LRModel(BaseModel):
             self.loss = self.criterion(self.pred, self.label)
             if self.opt.gpu >= 0:
                 self.loss.cuda(self.opt.gpu)
+        elif self.opt.propensity == 'piw':
+            pred = self.pred.data
+            piw = pred[0] / torch.sum(pred)
+            self.weight = float(piw * self.propensity)
+            self.criterion = nn.BCELoss(weight=piw * self.propensity, size_average=True)
+            self.loss = self.criterion(self.pred[0], self.label)
+            if self.opt.gpu >= 0:
+                self.loss.cuda(self.opt.gpu)
         else:
             raise NotImplementedError('No such propensity mode')
         # print(float(self.loss.data.cpu()))
@@ -121,3 +127,9 @@ class LRModel(BaseModel):
 
     def get_current_losses(self):
         return float(self.loss.data.cpu().numpy())
+
+    def get_infos(self):
+        st = ' '
+        for k in self.info_names:
+            st += k + ': ' + str(getattr(self, k)) + ' '
+        return st

@@ -2,7 +2,7 @@
 batchSize: 32
 cache: False
 checkpoints_dir: ./checkpoints
-clip_value: 5.0
+clip_value: 1.0
 continue_train: False
 dataroot: datasets/criteo-CAI
 display_freq: 1
@@ -14,9 +14,9 @@ max_idx: 74000
 nThreads: 4
 name: Saved_Experiment
 phase: train
-propensity: min
+propensity: piw
 random: True
-save_epoch_freq: 10
+save_epoch_freq: 1
 size_idx: 200
 sparse: False
 split_train: 0.75

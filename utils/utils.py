@@ -19,19 +19,29 @@ def shifted_scaled_sigmoid(x, shift=0.0, scale=1.0):
     s = 1 / (1 + np.exp(-x + shift))
     return (s * scale).round(2)
 
-def to_prediction_str(id, preds):
-    res = ['%d:%0.2f' % (i, p) for (i, p) in enumerate(preds)]
+def to_prediction_str(id, preds, opt):
+    if opt.nopost:
+        res = ['%d:%.8f' % (i, p) for (i, p) in enumerate(preds)]
+    else:
+        res = ['%d:%.2f' % (i, p) for (i, p) in enumerate(preds)]
     return '%d;%s' % (id, ','.join(res))
 
 shift = 1.1875
 scale = 850100
 maxplus = 15
 
-def post_process(pred, id):
-    pred = shifted_scaled_sigmoid(pred, shift, scale)
-    m = pred.argmax()
-    pred[m] = pred[m] + maxplus
-    pred_str = to_prediction_str(id, pred)
+def post_process(pred, id, opt):
+    if not opt.nopost:
+        pred = shifted_scaled_sigmoid(pred, shift, scale)
+        m = pred.argmax()
+        pred[m] = pred[m] + maxplus
+    pred_str = to_prediction_str(id, pred, opt)
+
+    scores = pred
+    best_score = np.max(scores)
+    scores_with_offset = scores - best_score
+    prob_scores = np.exp(scores_with_offset)
+    # pred_str += '\n' + to_prediction_str(id, prob_scores / np.sum(prob_scores), opt)
     return pred_str + '\n'
 
 def to_csr(idxs, vals, dim=74000):
