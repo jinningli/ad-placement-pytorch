@@ -8,6 +8,7 @@ import torch
 import pickle
 from utils.utils import to_csr
 from utils.utils import get_sparse_tensor
+from utils.utils import get_kd_sparse_tensor
 
 class ImpressionDataset(BaseDataset):
     def __init__(self):
@@ -18,7 +19,6 @@ class ImpressionDataset(BaseDataset):
         self.opt = opt
         fin = open(join(opt.dataroot, opt.phase + '_impression.txt'), 'r')
         print('Initializing Dataset...')
-        assert(opt.batchSize == 1)
         cnt = 0
         item = None
         for line in fin:
@@ -29,6 +29,9 @@ class ImpressionDataset(BaseDataset):
             id = int(split[0].strip())
             if len(split) == 4:
                 if item is not None:
+                    item['feature'] = get_kd_sparse_tensor(item['idx'])
+                    item['length'] = len(item['idx'])
+                    item.pop('idx')
                     self.data.append(item)
                 item = {}
                 item['id'] = id
@@ -52,8 +55,7 @@ class ImpressionDataset(BaseDataset):
                 features = split[3].lstrip('f ').strip()
                 f0, f1, idx, val = self.parse_features(features)
 
-                feature = get_sparse_tensor(idx, val)
-                item['feature'] = [feature]
+                item['idx'] = [idx]
                 label = torch.from_numpy(np.array([label], dtype='float32'))
                 item['label'] = label
 
@@ -61,18 +63,20 @@ class ImpressionDataset(BaseDataset):
                 assert (id == item['id'])
                 features = split[1].lstrip('f ').strip()
                 f0, f1, idx, val = self.parse_features(features)
-                feature = get_sparse_tensor(idx, val)
-                item['feature'].append(feature)
+                item['idx'].append(idx)
         print(cnt)
+        item['feature'] = get_kd_sparse_tensor(item['idx'])
+        item['length'] = len(item['idx'])
+        item.pop('idx')
         self.data.append(item)
         fin.close()
 
     def __getitem__(self, index):
         # store in sparse, get in dense
         item = self.data[index].copy()
-        for k in range(len(item['feature'])):
-            item['feature'][k] = item['feature'][k].to_dense().view(-1).unsqueeze(0)
-        item['feature'] = torch.cat(item['feature'], dim=0)
+        item['feature'] = item['feature'].to_dense()
+        item['id'] = torch.from_numpy(np.array([item['id']], dtype='int64')).view(-1)
+        # {id, label, propensity, feature, length}
         return item
 
     def __len__(self):

@@ -7,6 +7,7 @@ from data.cAISparseDataset import CAISparseDataset
 from data.impressionDataset import ImpressionDataset
 from dataLoader.lrDataLoader import LRDataLoader
 from dataLoader.lrSparseDataLoader import LRSparseDataLoader
+from dataLoader.impressionDataLoader import ImpressionDataLoader
 from model.lrModel import LRModel
 from model.lrSparseModel import LRSparseModel
 from model.piwLrModel import PiwLRModel
@@ -34,10 +35,11 @@ if __name__ == '__main__':
         dataset.initialize(opt)
         lr_loader.initialize(dataset=dataset, opt=opt)
     elif opt.propensity == 'piw':
-        setattr(opt, 'batchSize', 1)
+        # setattr(opt, 'batchSize', 1)
         dataset = ImpressionDataset()
         dataset.initialize(opt)
-        lr_loader = dataset
+        lr_loader = ImpressionDataLoader()
+        lr_loader.initialize(dataset=dataset, opt=opt)
     else:
         dataset = CAIDataset()
         lr_loader = LRDataLoader()
@@ -62,7 +64,7 @@ if __name__ == '__main__':
 
             if total_steps % opt.display_freq == 0:
                 res = ''
-                res += '[' + str(epoch) + "][" + str(epoch_iter) + '/' + str(len(dataset)) + '] Loss: %.9f'%(model.get_current_losses()) + model.get_infos() + ' Time: %.2f'%(time.time() - iter_start_time)
+                res += '[' + str(epoch) + "][" + str(epoch_iter) + '/' + str(len(dataset)) + '] Loss: %.6f'%(model.get_current_losses()) + ' ' + model.get_infos() + 'Time: %.2f'%(time.time() - iter_start_time)
                 print(res)
                 pass
 

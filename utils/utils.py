@@ -60,3 +60,20 @@ def get_sparse_tensor(idxs, vals, dim=74000):
     sparse_matrix = sparse.FloatTensor(i, v, torch.Size([1, dim]))
     # print(sparse_matrix)
     return sparse_matrix
+
+def get_kd_sparse_tensor(idxsls, dim=74000):
+    rowsls = []
+    for k in range(len(idxsls)):
+        for j in range(len(idxsls[k])):
+            rowsls.append(k)
+    rows = torch.from_numpy(np.array(rowsls, dtype='int64')).view(1, -1)
+    idxseries = []
+    for k in idxsls:
+        idxseries.extend(k)
+    cols = torch.from_numpy(np.array(idxseries, dtype='int64')).view(1, -1)
+    i = torch.cat((rows, cols), dim=0)
+    vals = np.ones(len(idxseries), dtype='int64') #TODO use value?
+    v = torch.from_numpy(np.array(vals, dtype='float32'))
+    sparse_matrix = sparse.FloatTensor(i, v, torch.Size([len(idxsls), dim]))
+    # print(sparse_matrix)D
+    return sparse_matrix
