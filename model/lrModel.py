@@ -32,7 +32,7 @@ class LRModel(BaseModel):
 
             self.schedulers = []
             self.optimizers = []
-            self.optimizer = torch.optim.Adam(self.parameters(), lr=opt.lr, weight_decay=1e-3)
+            self.optimizer = torch.optim.Adam(self.parameters(), lr=opt.lr, weight_decay=1e-4)
             self.optimizers.append(self.optimizer)
             for optimizer in self.optimizers:
                 self.schedulers.append(networks.get_scheduler(optimizer, opt))

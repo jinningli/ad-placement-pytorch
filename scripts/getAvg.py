@@ -34,7 +34,10 @@ class GetAvg():
             for res in self.res:
                 st = ''
                 for k in range(res['cnt']):
-                    st += str(k) + ':200000.00'
+                    if k == 0:
+                        st += str(k) + ':200000.00'
+                    else:
+                        st += str(k) + ':1.00'
                     if k != res['cnt'] - 1:
                         st += ','
                 output.write("%d;%s\n"%(res['id'], st))

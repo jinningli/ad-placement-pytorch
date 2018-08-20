@@ -3,9 +3,6 @@ from option.baseOption import BaseOptions
 class TrainOptions(BaseOptions):
     def initialize(self):
         BaseOptions.initialize(self)
-        # important
-        self.parser.add_argument('--split_train', type=float, default='0.75', help='% of train') # TODO
-        # ignorable
         self.parser.add_argument('--display_freq', type=int, default=1, help='frequency of showing training results on screen')  # TODO
         self.parser.add_argument('--continue_train', action='store_true', help='continue training: load the latest model')
         self.parser.add_argument('--phase', type=str, default='train', help='train, val, test')

@@ -27,7 +27,12 @@ class CAIDataset(BaseDataset):
 
     def initialize(self, opt):
         self.opt = opt
-        fin = open(join(opt.dataroot, opt.phase + '.txt'), 'r')
+        if opt.split:
+            fin = open(join(opt.dataroot, '_' + opt.phase + '.txt'), 'r')
+            print('Using source: ' + join(opt.dataroot, '_' + opt.phase + '.txt'))
+        else:
+            fin = open(join(opt.dataroot, opt.phase + '.txt'), 'r')
+            print('Using source: ' + join(opt.dataroot, opt.phase + '.txt'))
         print('Initializing Dataset...')
         if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and opt.cache:
             print('Loading dataset from cache')

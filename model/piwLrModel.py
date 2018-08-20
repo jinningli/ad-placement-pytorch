@@ -19,7 +19,6 @@ class PiwLRModel(BaseModel):
         self.isTrain = opt.isTrain
         self.loss_names = ['loss']
         # self.info_names = ['weight']
-        self.info_names = []
         self.model_names = ['fc1', 'fc2']
         self.fc1 = init_net(nn.Linear(opt.max_idx, 4096), init_type='normal', gpu=self.opt.gpu)
         self.fc2 = init_net(nn.Linear(4096, 1), init_type='normal', gpu=self.opt.gpu)
@@ -133,9 +132,3 @@ class PiwLRModel(BaseModel):
 
     def get_current_losses(self):
         return float(self.loss.data.cpu().numpy())
-
-    def get_infos(self):
-        st = ''
-        for k in self.info_names:
-            st += k + ': ' + str(getattr(self, k)) + ' '
-        return st

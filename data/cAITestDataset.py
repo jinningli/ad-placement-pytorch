@@ -32,7 +32,12 @@ class CAITestDataset(BaseDataset):
 
     def initialize(self, opt):
         self.opt = opt
-        fin = open(join(opt.dataroot, opt.phase + '.txt'), 'r')
+        if opt.split:
+            fin = open(join(opt.dataroot, '_' + opt.phase + '.txt'), 'r')
+            print('Using source: ' + join(opt.dataroot, '_' + opt.phase + '.txt'))
+        else:
+            fin = open(join(opt.dataroot, opt.phase + '.txt'), 'r')
+            print('Using source: ' + join(opt.dataroot, opt.phase + '.txt'))
         print('Initializing Dataset...')
         if os.path.exists(join(opt.dataroot, 'cache', opt.phase + '.pkl')) and opt.cache:
             print('Loading dataset from cache')
@@ -49,14 +54,25 @@ class CAITestDataset(BaseDataset):
                 split = line.split('|')
                 id = int(split[0].strip())
                 id = torch.from_numpy(np.array([id], dtype='int64')).view(-1)
-                assert len(split) == 2
-                features = split[1].lstrip('f ').strip()
-                f0, f1, idx, val = self.parse_features(features)
 
-                if not opt.cache:
-                    feature = get_sparse_tensor(idx, val)
-                else:
-                    feature = to_csr(idx, val)
+                if len(split) == 4:
+                    assert self.opt.phase == 'valid'
+                    features = split[3].lstrip('f ').strip()
+                    f0, f1, idx, val = self.parse_features(features)
+
+                    if not opt.cache:
+                        feature = get_sparse_tensor(idx, val)
+                    else:
+                        feature = to_csr(idx, val)
+
+                if len(split) == 2:
+                    features = split[1].lstrip('f ').strip()
+                    f0, f1, idx, val = self.parse_features(features)
+
+                    if not opt.cache:
+                        feature = get_sparse_tensor(idx, val)
+                    else:
+                        feature = to_csr(idx, val)
 
                 # feature = get_sparse_tensor(idx, val)
                 self.data.append({'id': id, 'feature': feature})
@@ -80,7 +96,6 @@ class CAITestDataset(BaseDataset):
         else:
             item['feature'] = torch.from_numpy(item['feature'].toarray().astype('float32')).view(-1)
         return item
-
 
     def __len__(self):
         return len(self.data)

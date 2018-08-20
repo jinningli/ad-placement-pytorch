@@ -10,6 +10,7 @@ class BaseOptions():
 
     def initialize(self):
         # important
+        self.parser.add_argument('--split', action='store_true', help='use split dataset?')
         self.parser.add_argument('--gpu', type=int, default=0, help='which gpu device, -1 for CPU')
         self.parser.add_argument('--dataroot', required=True, help='dataroot path')
         self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')

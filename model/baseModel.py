@@ -17,6 +17,7 @@ class BaseModel(nn.Module):
         self.model_names = []
         self.visual_names = []
         self.schedulers = []
+        self.info_names = []
 
     def set_input(self, input):
         self.input = input
@@ -98,3 +99,9 @@ class BaseModel(nn.Module):
                 print(net)
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
+
+    def get_infos(self):
+        st = ''
+        for k in self.info_names:
+            st += k + ': ' + str(getattr(self, k)) + ' '
+        return st

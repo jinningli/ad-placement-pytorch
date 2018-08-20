@@ -9,14 +9,18 @@ import pickle
 from utils.utils import to_csr
 from utils.utils import get_sparse_tensor
 from utils.utils import get_kd_sparse_tensor
+import random
 
 class ImpressionDataset(BaseDataset):
     def __init__(self):
         super(ImpressionDataset).__init__()
         self.data = []
+        # self.valid = []
 
     def initialize(self, opt):
         self.opt = opt
+        # self.rate = opt.split
+        # self.isvalid = None
         fin = open(join(opt.dataroot, opt.phase + '_impression.txt'), 'r')
         print('Initializing Dataset...')
         cnt = 0
@@ -28,6 +32,7 @@ class ImpressionDataset(BaseDataset):
             split = line.split('|')
             id = int(split[0].strip())
             if len(split) == 4:
+                # self.isvalid = random.random() > self.rate
                 if item is not None:
                     item['feature'] = get_kd_sparse_tensor(item['idx'])
                     item['length'] = len(item['idx'])
@@ -60,6 +65,8 @@ class ImpressionDataset(BaseDataset):
                 item['label'] = label
 
             if len(split) == 2:
+                # if not self.isvalid:
+                #     continue
                 assert (id == item['id'])
                 features = split[1].lstrip('f ').strip()
                 f0, f1, idx, val = self.parse_features(features)

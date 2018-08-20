@@ -14,12 +14,12 @@ max_idx: 74000
 nThreads: 4
 name: Saved_Experiment
 phase: train
-propensity: piw
+propensity: no
 random: True
 save_epoch_freq: 1
 size_idx: 200
 sparse: False
-split_train: 0.75
+split: True
 suffix: 
 which_epoch: latest
 -------------- End ----------------
