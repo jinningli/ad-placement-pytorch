@@ -2,6 +2,7 @@ import os
 import torch
 from collections import OrderedDict
 import torch.nn as nn
+from torch.autograd.variable import Variable
 
 class BaseModel(nn.Module):
     def name(self):
@@ -50,7 +51,7 @@ class BaseModel(nn.Module):
         #             net.cuda(self.gpu)
         #         else:
         #             torch.save(net.cpu().state_dict(), save_path)
-        if self.opt.propensity != 'no':
+        if self.opt.propensity != 'no' and self.opt.propensity != 'POEM':
             self.criterion = None
             self.loss = None
         save_filename = '%s_%s.save' % (which_epoch, self.name())
@@ -103,5 +104,11 @@ class BaseModel(nn.Module):
     def get_infos(self):
         st = ''
         for k in self.info_names:
-            st += k + ': ' + str(getattr(self, k)) + ' '
+            try:
+                if isinstance(getattr(self, k), Variable):
+                    st += k + ': ' + "%.7f"%float(getattr(self, k).cpu().data.numpy()) + ' '
+                else:
+                    st += k + ': ' + str(getattr(self, k)) + ' '
+            except:
+                pass
         return st

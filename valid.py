@@ -5,12 +5,19 @@ from model.lrModel import LRModel
 from utils.utils import post_process
 from dataLoader.lrDataLoader import LRDataLoader
 from itertools import groupby
+from model.piwLrModel import PiwLRModel
+from model.lrSparseModel import LRSparseModel
 import numpy as np
 import time
-from utils.CAItools.compute_score import grade_predictions
 
 def create_model(opt):
-    model = LRModel()
+    model = None
+    if opt.sparse:
+        model = LRSparseModel()
+    elif opt.propensity == 'piw' or opt.propensity == 'piwMSE':
+        model = PiwLRModel()
+    else:
+        model = LRModel()
     model.initialize(opt)
     print("model [%s] was created" % (model.name()))
     return model

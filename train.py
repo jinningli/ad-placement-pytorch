@@ -11,14 +11,17 @@ from dataLoader.impressionDataLoader import ImpressionDataLoader
 from model.lrModel import LRModel
 from model.lrSparseModel import LRSparseModel
 from model.piwLrModel import PiwLRModel
+from model.POEM import POEMModel
 import time
 
 def create_model(opt):
     model = None
     if opt.sparse:
         model = LRSparseModel()
-    elif opt.propensity == 'piw':
+    elif opt.propensity == 'piw' or opt.propensity == 'piwMSE':
         model = PiwLRModel()
+    elif opt.propensity == 'POEM':
+        model = POEMModel()
     else:
         model = LRModel()
     model.initialize(opt)
@@ -34,7 +37,7 @@ if __name__ == '__main__':
         lr_loader = LRSparseDataLoader()
         dataset.initialize(opt)
         lr_loader.initialize(dataset=dataset, opt=opt)
-    elif opt.propensity == 'piw':
+    elif opt.propensity == 'piw' or opt.propensity == 'piwMSE' or opt.propensity=='POEM':
         # setattr(opt, 'batchSize', 1)
         dataset = ImpressionDataset()
         dataset.initialize(opt)

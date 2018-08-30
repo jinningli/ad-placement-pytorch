@@ -20,6 +20,7 @@ class BaseOptions():
         self.parser.add_argument('--which_epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
         self.parser.add_argument('--cache', action='store_true', help='dont store the preprocessed dataset in a pickle cache')
         self.parser.add_argument('--sparse', action='store_true', help='Use sparse in the first layer')
+        self.parser.add_argument('--propensity', type=str, default='no', help='Use propensity? no|naive|min|piw|piwMSE|POEM')
         # ignorable
         self.parser.add_argument('--size_idx', type=int, default=200, help='Set max length of sentence')
         self.parser.add_argument('--max_idx', type=int, default=74000, help='Set max length of sentence')

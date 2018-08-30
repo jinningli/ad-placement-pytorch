@@ -5,11 +5,22 @@ from model.lrModel import LRModel
 from utils.utils import post_process
 from dataLoader.lrDataLoader import LRDataLoader
 from itertools import groupby
+from model.piwLrModel import PiwLRModel
+from model.lrSparseModel import LRSparseModel
+from model.POEM import POEMModel
 import numpy as np
 import time
 
 def create_model(opt):
-    model = LRModel()
+    model = None
+    if opt.sparse:
+        model = LRSparseModel()
+    elif opt.propensity == 'piw' or opt.propensity == 'piwMSE':
+        model = PiwLRModel()
+    elif opt.propensity == 'POEM':
+        model = POEMModel()
+    else:
+        model = LRModel()
     model.initialize(opt)
     print("model [%s] was created" % (model.name()))
     return model

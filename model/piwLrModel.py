@@ -10,6 +10,8 @@ import numpy as np
 import math
 from torch.nn.parameter import Parameter
 
+from .networks import BCEWithLogitsLoss as BCELLoss
+
 class PiwLRModel(BaseModel):
     def name(self):
         return 'PiwLRModel'
@@ -18,7 +20,7 @@ class PiwLRModel(BaseModel):
         BaseModel.initialize(self, opt)
         self.isTrain = opt.isTrain
         self.loss_names = ['loss']
-        # self.info_names = ['weight']
+        self.info_names = ['loss_BCEL', 'loss_propensity']
         self.model_names = ['fc1', 'fc2']
         self.fc1 = init_net(nn.Linear(opt.max_idx, 4096), init_type='normal', gpu=self.opt.gpu)
         self.fc2 = init_net(nn.Linear(4096, 1), init_type='normal', gpu=self.opt.gpu)
@@ -30,6 +32,7 @@ class PiwLRModel(BaseModel):
                     self.criterion.cuda(opt.gpu)
             else:
                 self.criterion = None
+            self.propensityCriterion = nn.MSELoss()
 
             self.schedulers = []
             self.optimizers = []
@@ -47,11 +50,11 @@ class PiwLRModel(BaseModel):
         propensity = None
         label = None
         id = input['id']
-        self.index = input['index']
 
         if self.opt.isTrain:
             propensity = input['propensity'].view(self.opt.batchSize, 1)
             label = input['label']
+            self.index = input['index']
 
         feature = input['feature']
 
@@ -73,6 +76,9 @@ class PiwLRModel(BaseModel):
             self.label = Variable(self.label)
 
         self.feature = Variable(self.feature)
+
+        if self.opt.isTrain and (self.opt.piw_gradient or self.opt.propensity == 'piwMSE'):
+            self.propensity = Variable(self.propensity)
 
         out = self.fc1(self.feature)
         out = F.relu(out)
@@ -106,20 +112,52 @@ class PiwLRModel(BaseModel):
             if self.opt.gpu >= 0:
                 self.loss.cuda(self.opt.gpu)
         elif self.opt.propensity == 'piw':
-            pred = self.pred.data
-            piw = []
+            if self.opt.piw_gradient:
+                self.piw = None
+                for k in range(self.opt.batchSize):
+                    arr = self.pred[self.index[k]:self.index[k + 1]]
+                    if k == 0:
+                        self.piw = torch.max(F.softmax(arr - torch.max(arr), dim=0))
+                    else:
+                        self.piw = torch.cat([self.piw, torch.max(F.softmax(arr - torch.max(arr), dim=0))], dim=0)
+                self.weight = self.piw * self.propensity # weight here: Variable
+                self.criterion = BCELLoss(weight=self.weight, size_average=True)
+                self.prediction = torch.cat([self.pred[self.index[k]] for k in range(self.opt.batchSize)], dim=0).view(self.opt.batchSize, 1)
+                self.loss_BCEL = self.criterion(self.prediction, self.label)
+                self.loss = self.loss_BCEL
+            else:
+                piw = []
+                pred = self.pred.data
+                for k in range(self.opt.batchSize):
+                    arr = Variable(pred[self.index[k]:self.index[k+1]])
+                    piw.append(float(F.softmax(arr - torch.max(arr), dim=0)[0].data))
+                self.piw = torch.from_numpy(np.array(piw, dtype='float32')).view(self.opt.batchSize, 1).cuda(self.gpu, async=True)
+                self.weight = self.piw * self.propensity # weight here: Tensor
+                self.criterion = nn.BCEWithLogitsLoss(weight=self.weight, size_average=True)
+                self.prediction = torch.cat([self.pred[self.index[k]] for k in range(self.opt.batchSize)], dim=0).view(self.opt.batchSize, 1)
+                self.loss = self.criterion(self.prediction, self.label)
+            if self.opt.gpu >= 0:
+                self.loss.cuda(self.opt.gpu)
+        elif self.opt.propensity == 'piwMSE':
+            self.piw = None
             for k in range(self.opt.batchSize):
-                arr = Variable(pred[self.index[k]:self.index[k+1]])
-                piw.append(float(F.softmax(arr - torch.max(arr), dim=0)[0].data))
-            self.piw = torch.from_numpy(np.array(piw, dtype='float32')).view(self.opt.batchSize, 1).cuda(self.gpu, async=True)
-            self.weight = self.piw * self.propensity
-            self.criterion = nn.BCEWithLogitsLoss(weight=self.weight, size_average=True)
-            self.prediction = torch.cat([self.pred[self.index[k]] for k in range(self.opt.batchSize)], dim=0).view(self.opt.batchSize, 1)
-            self.loss = self.criterion(self.prediction, self.label)
+                arr = self.pred[self.index[k]:self.index[k + 1]]
+                if k == 0:
+                    self.piw = torch.max(F.softmax(arr - torch.max(arr), dim=0))
+                else:
+                    self.piw = torch.cat([self.piw, torch.max(F.softmax(arr - torch.max(arr), dim=0))], dim=0)
+            self.weight = self.piw * self.propensity  # weight here: Variable
+            self.criterion = BCELLoss(weight=self.weight, size_average=True)
+            self.prediction = torch.cat([self.pred[self.index[k]] for k in range(self.opt.batchSize)], dim=0).view(
+                self.opt.batchSize, 1)
+            self.loss_BCEL = self.criterion(self.prediction, self.label)
+            self.loss_propensity = self.propensityCriterion(F.tanh(1.0 / self.piw), F.tanh(self.propensity)) * 100
+            self.loss = self.loss_BCEL + self.loss_propensity
             if self.opt.gpu >= 0:
                 self.loss.cuda(self.opt.gpu)
         else:
             raise NotImplementedError('No such propensity mode')
+
         # print(float(self.loss.data.cpu()))
         self.loss.backward()
         # print(self.loss.data)
